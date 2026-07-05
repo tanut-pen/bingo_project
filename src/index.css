@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Itim&family=Sarabun:wght@300;400;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  font-family: 'Fredoka', 'Sarabun', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom Tabletop Board Game Aesthetics */
+.tabletop-card {
+  background-color: #fdfbf7;
+  border: 4px solid #1e293b; /* border-slate-800 */
+  box-shadow: 4px 4px 0px 0px rgba(30, 41, 59, 1);
+  border-radius: 16px;
+}
+
+.tabletop-button-primary {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+  border: 4px solid #1e293b;
+  box-shadow: 4px 4px 0px 0px rgba(30, 41, 59, 1);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+  font-weight: 800;
+}
+
+.tabletop-button-primary:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px rgba(30, 41, 59, 1);
+}
+
+.tabletop-button-secondary {
+  background-color: #f59e0b; /* amber-500 */
+  color: white;
+  border: 4px solid #1e293b;
+  box-shadow: 4px 4px 0px 0px rgba(30, 41, 59, 1);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+  font-weight: 800;
+}
+
+.tabletop-button-secondary:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px rgba(30, 41, 59, 1);
+}
+
+.tabletop-button-danger {
+  background-color: #ef4444; /* red-500 */
+  color: white;
+  border: 4px solid #1e293b;
+  box-shadow: 4px 4px 0px 0px rgba(30, 41, 59, 1);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+  font-weight: 800;
+}
+
+.tabletop-button-danger:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px rgba(30, 41, 59, 1);
+}
+
+.tabletop-input {
+  border: 3px solid #1e293b;
+  border-radius: 12px;
+  background-color: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.tabletop-input:focus {
+  outline: none;
+  border-color: #f59e0b;
+}
+
+/* Category screen pop animation */
+@keyframes category-pop {
+  0% {
+    transform: scale(0.7) rotate(-3deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) rotate(2deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.category-pop-animation {
+  animation: category-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Slot Machine Visual Roll */
+@keyframes slot-roll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-80%);
+  }
+}
+
+.animate-slot-roll {
+  animation: slot-roll 0.15s linear infinite;
+}
+
+/* Wood dot style grid background */
+.wood-board-bg {
+  background-color: #fbf8f0;
+  background-image: 
+    radial-gradient(rgba(30, 41, 59, 0.05) 1.5px, transparent 1.5px),
+    radial-gradient(rgba(30, 41, 59, 0.05) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
