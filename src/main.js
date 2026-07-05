@@ -4,7 +4,7 @@
  */
 
 // --- GLOBAL ERROR BOUNDARY ---
-window.onerror = function(message, source, lineno, colno, error) {
+window.onerror = function (message, source, lineno, colno, error) {
   console.error("GLOBAL ERROR DETECTED:", message, "at", lineno, ":", colno);
   const errDiv = document.createElement('div');
   errDiv.style.position = 'fixed';
@@ -49,13 +49,26 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const CELEBRITY_NAMES = [
-  "Lisa Blackpink", "Elon Musk", "Harry Potter", "Spider-Man", "Bill Gates", 
-  "Cristiano Ronaldo", "Steve Jobs", "Gordon Ramsay", "Iron Man", "Jack Sparrow", 
-  "John Wick", "สุนทรภู่", "Taylor Swift", "Albert Einstein", "Lionel Messi", 
-  "Marie Curie", "Jackie Chan", "Lord Voldemort", "Joker", "Conan Edogawa", 
-  "Doraemon", "David Beckham", "วู้ดดี้ วุฒิธร", "เชฟป้อม", "Mario Maurer", 
-  "Nadech Kugimiya", "Yaya Urassaya", "Keanu Reeves", "Tom Cruise", "Angelina Jolie", 
-  "Jennie Blackpink", "IU (Lee Ji-eun)", "Yao Ming", "Saitama", "Darth Vader"
+  "Lisa Blackpink", "Jennie Blackpink", "Jisoo Blackpink", "Rosé Blackpink", "IU (Lee Ji-eun)",
+  "Taylor Swift", "Beyoncé", "Rihanna", "Ariana Grande", "Billie Eilish",
+  "Justin Bieber", "Bruno Mars", "Ed Sheeran", "The Weeknd", "Lady Gaga",
+  "Michael Jackson", "Freddie Mercury", "Madonna", "Elvis Presley", "Eminem",
+  "Elon Musk", "Bill Gates", "Steve Jobs", "Mark Zuckerberg", "Jeff Bezos",
+  "Albert Einstein", "Marie Curie", "Isaac Newton", "Charles Darwin", "Stephen Hawking",
+  "Cristiano Ronaldo", "Lionel Messi", "David Beckham", "Kylian Mbappé", "Neymar Jr.",
+  "Michael Jordan", "LeBron James", "Stephen Curry", "Kobe Bryant", "Shaquille O'Neal",
+  "Robert Downey Jr.", "Scarlett Johansson", "Tom Holland", "Chris Evans", "Chris Hemsworth",
+  "Leonardo DiCaprio", "Brad Pitt", "Johnny Depp", "Tom Cruise", "Keanu Reeves",
+  "Angelina Jolie", "Margot Robbie", "Zendaya", "Emma Watson", "Natalie Portman",
+  "Christopher Nolan", "Steven Spielberg", "Quentin Tarantino", "James Cameron", "Hayao Miyazaki",
+  "Gordon Ramsay", "Chef Paom", "Woody Vuthithorn", "Na Nek", "Pimrypie",
+  "Sunny Suwanmethanont", "Mario Maurer", "Nadech Kugimiya", "Mark Prin", "Boy Pakorn",
+  "Yaya Urassaya", "Bella Ranee", "Baifern Pimchanok", "Kimmy Kimberley", "Chompoo Araya",
+  "Bright Vachirawit", "Win Metawin", "Billkin Putthipong", "PP Krit", "Jeff Satur",
+  "Nont Tanont", "Ink Waruntorn", "Bowkylion", "Milli", "The Toys",
+  "Toon Bodyslam", "Joey Boy", "F.Hero", "Stamp Apiwat", "Peck Palitchoke",
+  "Harry Potter", "Lord Voldemort", "Hermione Granger", "Ron Weasley", "Albus Dumbledore",
+  "Spider-Man", "Iron Man", "Batman", "Superman", "Joker"
 ];
 
 // --- AUDIO SYNTHESIS UTILITY ---
@@ -87,14 +100,14 @@ class AudioSynth {
     const gain = this.ctx.createGain();
     osc.connect(gain);
     gain.connect(this.ctx.destination);
-    
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(650, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(190, this.ctx.currentTime + 0.08);
-    
+
     gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
-    
+
     osc.start();
     osc.stop(this.ctx.currentTime + 0.08);
   }
@@ -108,13 +121,13 @@ class AudioSynth {
     const gain = this.ctx.createGain();
     osc.connect(gain);
     gain.connect(this.ctx.destination);
-    
+
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
-    
+
     gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-    
+
     osc.start();
     osc.stop(this.ctx.currentTime + 0.05);
   }
@@ -130,20 +143,20 @@ class AudioSynth {
       const gain = this.ctx.createGain();
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, start);
-      
+
       gain.gain.setValueAtTime(0.12, start);
       gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      
+
       osc.start(start);
       osc.stop(start + duration);
     };
 
     const now = this.ctx.currentTime;
     const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
-    
+
     notes.forEach((freq, index) => {
       playNote(freq, now + index * 0.1, 0.25);
     });
@@ -186,10 +199,10 @@ function loadState() {
 
     const savedPool = localStorage.getItem('bingo_admin_pool');
     if (savedPool) state.adminPool = JSON.parse(savedPool);
-    
+
     const savedDrawn = localStorage.getItem('bingo_admin_drawn');
     if (savedDrawn) state.adminDrawn = JSON.parse(savedDrawn);
-    
+
     const savedCurrent = localStorage.getItem('bingo_admin_current');
     if (savedCurrent) {
       try {
@@ -431,7 +444,7 @@ function renderViews() {
     navTabPlayer.className = "flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl border-2 border-slate-800 font-black text-lg transition-all bg-slate-800 text-amber-50 border-b-6 shadow-[0px_4px_0px_0px_rgba(30,41,59,1)] hover:translate-y-[-2px] active:translate-y-[2px]";
     stopConfetti();
     if (victoryModal) victoryModal.style.display = 'none';
-    
+
     renderAdminScreen();
   } else {
     if (viewAdmin) viewAdmin.style.display = 'none';
@@ -439,7 +452,7 @@ function renderViews() {
 
     navTabPlayer.className = "flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl border-2 border-slate-800 font-black text-lg transition-all bg-amber-100 text-slate-800 border-b-2 shadow-none translate-y-[4px]";
     navTabAdmin.className = "flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl border-2 border-slate-800 font-black text-lg transition-all bg-slate-800 text-amber-50 border-b-6 shadow-[0px_4px_0px_0px_rgba(30,41,59,1)] hover:translate-y-[-2px] active:translate-y-[2px]";
-    
+
     updatePlayerUIMode();
     renderPlayerGrid();
   }
@@ -502,8 +515,8 @@ function renderAdminScreen() {
   if (labelAdminTotal) labelAdminTotal.textContent = state.adminPool.length;
 
   if (labelSyncStatus) {
-    labelSyncStatus.textContent = state.lastSyncTime 
-      ? `ซิงก์ล่าสุด: ${state.lastSyncTime}` 
+    labelSyncStatus.textContent = state.lastSyncTime
+      ? `ซิงก์ล่าสุด: ${state.lastSyncTime}`
       : 'ยังไม่ได้ซิงก์ข้อมูล';
   }
 
@@ -537,8 +550,8 @@ function renderAdminScreen() {
   }
 
   if (barAdminProgress) {
-    const progressWidth = state.adminPool.length > 0 
-      ? (state.adminDrawn.length / state.adminPool.length) * 100 
+    const progressWidth = state.adminPool.length > 0
+      ? (state.adminDrawn.length / state.adminPool.length) * 100
       : 0;
     barAdminProgress.style.width = `${progressWidth}%`;
   }
@@ -548,9 +561,8 @@ function renderAdminScreen() {
     state.adminPool.forEach((item, idx) => {
       const isDrawn = state.adminDrawn.includes(item);
       const itemEl = document.createElement('div');
-      itemEl.className = `border-2 border-slate-800/20 rounded-xl p-2.5 flex items-center justify-between gap-3 shadow-sm ${
-        isDrawn ? 'bg-emerald-50 border-emerald-800/30' : 'bg-white'
-      }`;
+      itemEl.className = `border-2 border-slate-800/20 rounded-xl p-2.5 flex items-center justify-between gap-3 shadow-sm ${isDrawn ? 'bg-emerald-50 border-emerald-800/30' : 'bg-white'
+        }`;
 
       itemEl.innerHTML = `
         <div class="flex items-center gap-2 w-full">
@@ -582,11 +594,9 @@ function renderAdminScreen() {
         entry.className = "relative group";
 
         entry.innerHTML = `
-          <div class="absolute -left-[26px] top-1 w-4 h-4 rounded-full border-2 border-slate-850 shadow ${
-            idx === 0 ? 'bg-emerald-500 scale-125 border-emerald-700 animate-pulse' : 'bg-white'
+          <div class="absolute -left-[26px] top-1 w-4 h-4 rounded-full border-2 border-slate-850 shadow ${idx === 0 ? 'bg-emerald-500 scale-125 border-emerald-700 animate-pulse' : 'bg-white'
           }"></div>
-          <div class="p-2.5 rounded-xl border-2 border-slate-800 transition-all ${
-            idx === 0 ? 'bg-emerald-50 shadow-[2px_2px_0px_rgba(30,41,59,1)]' : 'bg-white/70 shadow-sm'
+          <div class="p-2.5 rounded-xl border-2 border-slate-800 transition-all ${idx === 0 ? 'bg-emerald-50 shadow-[2px_2px_0px_rgba(30,41,59,1)]' : 'bg-white/70 shadow-sm'
           }">
             <div class="flex items-center justify-between gap-4">
               <span class="text-sm font-extrabold ${idx === 0 ? 'text-emerald-950' : 'text-slate-850'}">${item}</span>
@@ -608,7 +618,7 @@ function renderAdminScreen() {
 // Google Sheet Sync Categories Ingestion
 async function syncGoogleSheetCategories(showFeedback = true) {
   if (!btnSheetSync) return;
-  
+
   // Animate the loader icon
   if (iconSheetSync) iconSheetSync.classList.add('animate-spin');
   btnSheetSync.disabled = true;
@@ -618,7 +628,7 @@ async function syncGoogleSheetCategories(showFeedback = true) {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Network response was not ok');
     const text = await response.text();
-    
+
     // Parse CSV (read A column, which is the first item on each line)
     const lines = text.split(/\r?\n/);
     const parsed = lines
@@ -636,13 +646,13 @@ async function syncGoogleSheetCategories(showFeedback = true) {
       if (state.adminCurrent && !parsed.includes(state.adminCurrent)) {
         state.adminCurrent = null;
       }
-      
+
       const now = new Date();
       state.lastSyncTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       saveState();
       renderAdminScreen();
       audioSynth.playClick();
-      
+
       if (showFeedback) {
         alert(`ซิงก์ข้อมูลหมวดหมู่จาก Google Sheet สำเร็จ! ทั้งหมด ${parsed.length} รายการ`);
       }
@@ -715,7 +725,7 @@ btnAdminSpin?.addEventListener('click', () => {
       state.spinIndex = Math.floor(Math.random() * state.adminPool.length);
       audioSynth.playSpinTick(350 + Math.random() * 150);
       renderAdminScreen();
-      
+
       const nextDelay = 60 + Math.pow(elapsed / duration, 2.5) * 220;
       setTimeout(tick, nextDelay);
     }
@@ -761,7 +771,7 @@ function updatePlayerUIMode() {
 
     if (tabEdit) tabEdit.className = "flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl border-2 border-slate-800 font-black text-lg transition-all bg-amber-100 text-slate-800 border-b-2 shadow-none translate-y-[4px]";
     if (tabPlay) tabPlay.className = "flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl border-2 border-slate-800 font-black text-lg transition-all bg-slate-800 text-amber-50 border-b-6 shadow-[0px_4px_0px_0px_rgba(30,41,59,1)] hover:translate-y-[-2px] active:translate-y-[2px]";
-    
+
     stopConfetti();
     if (victoryModal) victoryModal.style.display = 'none';
   }
