@@ -2,7 +2,7 @@
  * Celebrity Bingo - Unified main controller (Admin & Player Board)
  * Uses pure Vanilla JavaScript, Tailwind CSS, and Lucide Icons.
  */
-import { Session } from './session.js';
+import { Session, ensureFirebaseInitialized } from './session.js';
 
 // --- GLOBAL ERROR BOUNDARY ---
 window.onerror = function (message, source, lineno, colno, error) {
@@ -1183,6 +1183,9 @@ audioSynth.toggle(state.soundEnabled);
 renderViews();
 renderSoundButtons();
 renderSessionPanel();
+
+// Preemptively fetch configuration and initialize Firebase
+ensureFirebaseInitialized().catch(err => console.warn(err));
 
 // Auto-sync Google Sheet categories on load without showing noisy alert alerts
 syncGoogleSheetCategories(false);
