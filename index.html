@@ -55,7 +55,7 @@
       </header>
 
       <!-- Global Navigation Tabs (Admin vs. Player) -->
-      <nav class="grid grid-cols-2 gap-4 mb-8">
+      <nav class="grid grid-cols-2 gap-4 mb-6">
         <button 
           id="nav-tab-admin"
           class="flex items-center justify-center gap-2.5 py-4 px-6 rounded-2xl border-2 border-slate-800 font-black text-lg transition-all bg-amber-100 text-slate-800 border-b-2 shadow-none translate-y-[4px]"
@@ -72,6 +72,132 @@
           <span>🎯 โหมดผู้เล่น (Player Board)</span>
         </button>
       </nav>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- ONLINE SESSION PANEL                                    -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <section id="session-panel" class="mb-8 tabletop-card p-5 border-4 border-slate-800 bg-gradient-to-br from-indigo-50 to-sky-50">
+        
+        <!-- Header row -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="wifi" class="h-5 w-5 text-indigo-600"></i>
+            เล่นออนไลน์ร่วมกัน
+          </h2>
+          <!-- Connected badge (hidden until session active) -->
+          <span id="session-status-badge" class="hidden text-[11px] font-black px-2.5 py-1 rounded-full border-2 border-slate-800 bg-emerald-100 text-emerald-800 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+            <span id="session-status-text">Connected</span>
+          </span>
+        </div>
+
+        <!-- ── Idle state: create or join ── -->
+        <div id="session-idle" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          
+          <!-- Host: create session (shown on Admin tab) -->
+          <button
+            id="btn-session-create"
+            class="flex-1 sm:flex-none py-3 px-5 rounded-xl border-2 border-slate-800 font-black text-sm bg-indigo-600 text-white shadow-[3px_3px_0px_rgba(30,41,59,1)] hover:scale-[1.02] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
+          >
+            <i data-lucide="plus-circle" class="h-4 w-4"></i>
+            สร้างห้องเกม (Host)
+          </button>
+
+          <div class="flex items-center gap-1 text-xs font-black text-slate-400 select-none shrink-0">หรือ</div>
+
+          <!-- Player: join via code -->
+          <div class="flex-1 flex gap-2 items-center">
+            <input
+              id="input-session-code"
+              type="text"
+              maxlength="6"
+              placeholder="รหัส 6 ตัว..."
+              class="flex-1 min-w-0 px-4 py-3 rounded-xl border-2 border-slate-800 font-black text-sm text-slate-800 bg-white placeholder:text-slate-400 uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button
+              id="btn-session-join"
+              class="shrink-0 py-3 px-5 rounded-xl border-2 border-slate-800 font-black text-sm bg-amber-400 text-slate-900 shadow-[3px_3px_0px_rgba(30,41,59,1)] hover:scale-[1.02] active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-2"
+            >
+              <i data-lucide="log-in" class="h-4 w-4"></i>
+              เข้าร่วม
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Active session state (hidden until connected) ── -->
+        <div id="session-active" class="hidden flex-col gap-4">
+
+          <!-- Code display + copy + player count -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-white border-2 border-slate-800 rounded-xl px-4 py-2.5 shadow-[2px_2px_0px_rgba(30,41,59,1)]">
+              <span class="text-[10px] font-black uppercase text-slate-500 tracking-widest">รหัสห้อง</span>
+              <span id="session-code-display" class="text-2xl font-black text-indigo-700 tracking-widest select-all">──────</span>
+            </div>
+            <button
+              id="btn-session-copy"
+              class="py-2 px-4 rounded-xl border-2 border-slate-800 font-black text-sm bg-white text-slate-700 shadow-[2px_2px_0px_rgba(30,41,59,1)] hover:scale-105 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5"
+            >
+              <i data-lucide="copy" class="h-4 w-4"></i>
+              คัดลอก
+            </button>
+            <div class="flex items-center gap-1.5 text-sm font-black text-slate-700">
+              <i data-lucide="users" class="h-4 w-4 text-indigo-500"></i>
+              <span id="session-player-count">0</span>
+              <span>ผู้เล่น</span>
+            </div>
+          </div>
+
+          <!-- Player list (host only) -->
+          <div id="session-player-list-wrap" class="hidden">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">ผู้เล่นที่เข้าร่วม</p>
+            <div id="session-player-list" class="flex flex-wrap gap-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Live host draw display (player only) -->
+          <div id="session-host-draw-display" class="hidden items-center gap-3 bg-slate-900 border-2 border-slate-800 rounded-xl px-4 py-3">
+            <i data-lucide="radio" class="h-5 w-5 text-emerald-400 shrink-0 animate-pulse"></i>
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">หมวดหมู่ล่าสุดจาก Host</p>
+              <p id="session-host-current" class="text-lg font-black text-emerald-400 leading-tight">รอ Host เริ่มสุ่ม...</p>
+            </div>
+          </div>
+
+          <!-- Game state: Lobby / In-game banner -->
+          <div id="session-game-state-banner" class="flex items-center gap-2 text-sm font-black px-4 py-2.5 rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900">
+            <i data-lucide="clock" class="h-4 w-4"></i>
+            <span id="session-game-state-text">ล็อบบี้ — รอ Host เริ่มเกม</span>
+          </div>
+
+          <!-- Action buttons row -->
+          <div class="flex flex-wrap gap-2">
+            <!-- Host only: start game -->
+            <button
+              id="btn-session-start"
+              class="hidden py-2.5 px-5 rounded-xl border-2 border-slate-800 font-black text-sm bg-emerald-500 text-white shadow-[2px_2px_0px_rgba(30,41,59,1)] hover:scale-[1.02] active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-2"
+            >
+              <i data-lucide="play" class="h-4 w-4"></i>
+              เริ่มเกม!
+            </button>
+            <!-- Leave session -->
+            <button
+              id="btn-session-leave"
+              class="py-2.5 px-5 rounded-xl border-2 border-slate-800 font-black text-sm bg-red-100 text-red-700 hover:bg-red-200 transition-all flex items-center gap-2"
+            >
+              <i data-lucide="x-circle" class="h-4 w-4"></i>
+              <span id="btn-session-leave-label">ออกจากเซสชัน</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Error / info message -->
+        <p id="session-error" class="hidden mt-3 text-sm font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></p>
+
+      </section>
 
       <!-- VIEW A: ADMIN (HOST CALLER TOOL) -->
       <div id="view-admin" class="flex flex-col gap-8">
@@ -122,7 +248,7 @@
               </div>
             </div>
 
-            <!-- Google Sheet Sync Panel -->
+             <!-- Google Sheet Sync Panel -->
             <div class="tabletop-card p-6 flex flex-col gap-4">
               <div>
                 <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
@@ -132,14 +258,6 @@
                 <p class="text-xs text-slate-500 font-semibold mt-1">
                   ระบบจะซิงก์หัวข้อหมวดหมู่คำถามหลักโดยตรงจากคอลัมน์ A ใน Google Sheet แผ่นนี้
                 </p>
-                <a 
-                  href="https://docs.google.com/spreadsheets/d/1DrxfnXHh3SsI60n3ovADjgmy3_t1Y0uJWuuD7sbUB9I/edit?gid=0#gid=0" 
-                  target="_blank" 
-                  class="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 underline mt-2"
-                >
-                  <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
-                  เปิด Google Sheet ต้นฉบับ
-                </a>
               </div>
 
               <div class="flex flex-col sm:flex-row gap-3 items-center">
@@ -151,19 +269,6 @@
                   <span>ดึงข้อมูลหมวดหมู่ (Sync Sheet)</span>
                 </button>
                 <span id="label-sync-status" class="text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full">ยังไม่ได้ซิงก์ข้อมูล</span>
-              </div>
-            </div>
-
-            <!-- Categories Live Pool list -->
-            <div class="tabletop-card p-6">
-              <h2 id="label-admin-pool-title" class="text-lg font-black text-slate-800 mb-3 flex items-center gap-2">
-                <i data-lucide="file-text" class="h-5 w-5 text-slate-700"></i>
-                คลังหมวดหมู่คำถาม (0 รายการ)
-              </h2>
-
-              <!-- Scrollable category list -->
-              <div id="admin-pool-list" class="bg-amber-100/50 border-4 border-slate-800/25 rounded-2xl p-4 max-h-[260px] overflow-y-auto flex flex-col gap-2">
-                <!-- Items populated by main.js -->
               </div>
             </div>
 
