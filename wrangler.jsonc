@@ -1,8 +1,9 @@
 {
   "name": "celebrity-bingo-player-board",
   "compatibility_date": "2026-07-06",
+  "main": "src/entry.js",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS"
   }
 }
