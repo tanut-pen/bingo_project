@@ -1,9 +1,0 @@
-{
-    "name": "bingo-project",
-    "compatibility_date": "2026-07-06",
-    "main": "src/entry.js",
-    "assets": {
-        "directory": "./dist",
-        "binding": "ASSETS"
-    }
-}

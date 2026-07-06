@@ -21,21 +21,58 @@ import {
   serverTimestamp,
 } from 'firebase/database';
 
-// ─── Firebase Config ─────────────────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-};
+let app = null;
+let db = null;
+let initPromise = null;
 
+export async function ensureFirebaseInitialized() {
+  if (initPromise) return initPromise;
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  initPromise = (async () => {
+    // 1. First, check if we have local build-time variables (for local development)
+    let config = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+    };
+
+    // 2. If build-time config is empty (typical for Workers Git deployments),
+    // fetch the variables dynamically from the Worker API at runtime
+    if (!config.apiKey || !config.appId) {
+      try {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+          const remoteConfig = await response.json();
+          if (remoteConfig.apiKey && remoteConfig.appId) {
+            config = remoteConfig;
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dynamic runtime configuration:", err);
+      }
+    }
+
+    if (config.apiKey && config.appId) {
+      try {
+        app = initializeApp(config);
+        db = getDatabase(app);
+        return true;
+      } catch (err) {
+        console.error("Firebase initialization failed:", err);
+      }
+    } else {
+      console.warn("Firebase config is incomplete. Online features are disabled.");
+    }
+    return false;
+  })();
+
+  return initPromise;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,6 +126,7 @@ function _stopAllListeners() {
 
 export const Session = {
   // ── Getters ────────────────────────────────────────────────────────────────
+  get initialized() { return db !== null; },
   get active() { return _session.active; },
   get code() { return _session.code; },
   get role() { return _session.role; },
@@ -102,6 +140,8 @@ export const Session = {
    * @param {string[]} pool — current admin category pool
    */
   async create(pool) {
+    await ensureFirebaseInitialized();
+    if (!db) throw new Error('ระบบเซสชันออนไลน์ยังไม่พร้อมใช้งาน (กรุณาตรวจสอบการตั้งค่า Firebase)');
     let code;
     let attempts = 0;
     // Find an unused code
@@ -140,6 +180,8 @@ export const Session = {
    * Returns { ok, error, gameStarted }
    */
   async join(code, nickname, currentCells) {
+    await ensureFirebaseInitialized();
+    if (!db) return { ok: false, error: 'ระบบเซสชันออนไลน์ยังไม่พร้อมใช้งาน (กรุณาตรวจสอบการตั้งค่า Firebase)' };
     const upperCode = code.toUpperCase().trim();
     const snap = await get(ref(db, `sessions/${upperCode}`));
 
