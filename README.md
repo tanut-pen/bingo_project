@@ -1,16 +1,86 @@
-# React + Vite
+# Celebrity Bingo
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Celebrity Bingo is a lightweight browser-based game helper for running a celebrity bingo session. It includes a host/admin view for drawing categories and a player board view for marking answers.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Host/admin mode for spinning and announcing category prompts
+- Player board mode for marking bingo squares
+- Local persistence with browser storage so progress is remembered
+- Responsive layout with a tabletop-style UI
+- Optional sound and voice announcements
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Vite
+- Vanilla JavaScript
+- Tailwind CSS
+- Lucide icons
 
-## Expanding the Oxlint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- Node.js 18+ recommended
+- npm
+
+## Run locally
+
+1. Install dependencies
+   ```bash
+   npm install
+   ```
+2. Start the local development server
+   ```bash
+   npm run dev
+   ```
+3. Open the local URL shown in the terminal, usually:
+   ```text
+   http://localhost:5173
+   ```
+
+## Build for production
+
+```bash
+npm run build
+```
+
+The production build will be generated in the dist folder.
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Cloudflare deployment
+
+Yes — this repository is suitable for deployment on Cloudflare Pages or Cloudflare Workers because it is a static Vite frontend with no server-side runtime requirement.
+
+### Option 1: Cloudflare Pages
+
+- Connect the repository in Cloudflare Pages
+- Use these build settings:
+  - Build command: npm run build
+  - Output directory: dist
+
+### Option 2: Cloudflare Workers (Workers Assets)
+
+This repository includes a Wrangler config for static assets.
+
+1. Install Wrangler if needed:
+   ```bash
+   npm install -g wrangler
+   ```
+2. Build the app:
+   ```bash
+   npm run build
+   ```
+3. Deploy:
+   ```bash
+   wrangler deploy
+   ```
+
+If you prefer, you can also deploy the built dist folder directly from Cloudflare Pages.
+
+## Notes
+
+The app uses browser APIs such as localStorage, speech synthesis, and the Web Audio API, so it works best as a static frontend deployment.
