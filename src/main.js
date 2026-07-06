@@ -2,6 +2,7 @@
  * Celebrity Bingo - Unified main controller (Admin & Player Board)
  * Uses pure Vanilla JavaScript, Tailwind CSS, and Lucide Icons.
  */
+import { Session } from './session.js';
 
 // --- GLOBAL ERROR BOUNDARY ---
 window.onerror = function (message, source, lineno, colno, error) {
@@ -171,8 +172,8 @@ const state = {
   activeTab: 'admin', // 'admin' or 'player'
 
   // Settings
-  soundEnabled: true,
-  voiceEnabled: true,
+  soundEnabled: false,
+  voiceEnabled: false,
 
   // Admin Pool Settings
   adminPool: [...DEFAULT_CATEGORIES],
@@ -185,7 +186,10 @@ const state = {
   // Player Grid Settings
   playerCells: Array(25).fill(null).map((_, i) => ({ id: i, name: "", marked: false })),
   playerIsPlayMode: false,
-  playerLastBingoCount: 0
+  playerLastBingoCount: 0,
+
+  // Online Session
+  sessionGameStarted: false, // true once host starts the game
 };
 
 /**
@@ -194,8 +198,8 @@ const state = {
 function loadState() {
   try {
     state.activeTab = localStorage.getItem('bingo_active_tab') || 'admin';
-    state.soundEnabled = localStorage.getItem('bingo_sound_enabled') !== 'false';
-    state.voiceEnabled = localStorage.getItem('bingo_voice_enabled') !== 'false';
+    state.soundEnabled = localStorage.getItem('bingo_sound_enabled') === 'true';
+    state.voiceEnabled = localStorage.getItem('bingo_voice_enabled') === 'true';
 
     const savedPool = localStorage.getItem('bingo_admin_pool');
     if (savedPool) state.adminPool = JSON.parse(savedPool);
@@ -652,6 +656,10 @@ async function syncGoogleSheetCategories(showFeedback = true) {
       saveState();
       renderAdminScreen();
       audioSynth.playClick();
+      // Sync new pool to session
+      if (Session.active && Session.isHost) {
+        Session.syncPool(parsed);
+      }
 
       if (showFeedback) {
         alert(`ซิงก์ข้อมูลหมวดหมู่จาก Google Sheet สำเร็จ! ทั้งหมด ${parsed.length} รายการ`);
@@ -721,6 +729,10 @@ btnAdminSpin?.addEventListener('click', () => {
       renderAdminScreen();
       audioSynth.playSpinTick(800);
       speakText(targetCategory);
+      // Broadcast draw to session players
+      if (Session.active && Session.isHost) {
+        Session.broadcastDraw(targetCategory, state.adminDrawn);
+      }
     } else {
       state.spinIndex = Math.floor(Math.random() * state.adminPool.length);
       audioSynth.playSpinTick(350 + Math.random() * 150);
@@ -753,6 +765,10 @@ function handleResetDraws() {
     state.adminCurrent = null;
     saveState();
     renderAdminScreen();
+    // Broadcast reset to session players
+    if (Session.active && Session.isHost) {
+      Session.broadcastReset();
+    }
   }
 }
 
@@ -840,6 +856,10 @@ function renderPlayerGrid() {
       textarea.addEventListener('input', (e) => {
         cell.name = e.target.value;
         saveState();
+        // Sync board to session (only in lobby, before game starts)
+        if (Session.active && Session.isPlayer && !state.sessionGameStarted) {
+          Session.updatePlayerCells(state.playerCells);
+        }
       });
 
       cellEl.appendChild(textarea);
@@ -921,11 +941,248 @@ btnVictoryRestart?.addEventListener('click', () => {
   renderPlayerGrid();
 });
 
+// --- SESSION UI MANAGEMENT ---
+
+// DOM selectors for session panel
+const sessionIdle            = document.getElementById('session-idle');
+const sessionActivePanel     = document.getElementById('session-active');
+const sessionCodeDisplay     = document.getElementById('session-code-display');
+const sessionPlayerCount     = document.getElementById('session-player-count');
+const sessionPlayerListWrap  = document.getElementById('session-player-list-wrap');
+const sessionPlayerList      = document.getElementById('session-player-list');
+const sessionHostDrawDisplay = document.getElementById('session-host-draw-display');
+const sessionHostCurrent     = document.getElementById('session-host-current');
+const sessionGameStateBanner = document.getElementById('session-game-state-banner');
+const sessionGameStateText   = document.getElementById('session-game-state-text');
+const sessionStatusBadge     = document.getElementById('session-status-badge');
+const sessionStatusText      = document.getElementById('session-status-text');
+const sessionError           = document.getElementById('session-error');
+const btnSessionCreate       = document.getElementById('btn-session-create');
+const btnSessionJoin         = document.getElementById('btn-session-join');
+const btnSessionCopy         = document.getElementById('btn-session-copy');
+const btnSessionStart        = document.getElementById('btn-session-start');
+const btnSessionLeave        = document.getElementById('btn-session-leave');
+const btnSessionLeaveLabel   = document.getElementById('btn-session-leave-label');
+const inputSessionCode       = document.getElementById('input-session-code');
+
+function showSessionError(msg) {
+  if (!sessionError) return;
+  sessionError.textContent = msg;
+  sessionError.classList.remove('hidden');
+  setTimeout(() => sessionError.classList.add('hidden'), 5000);
+}
+
+function renderSessionPanel() {
+  if (!Session.active) {
+    // Idle state
+    sessionIdle?.classList.remove('hidden');
+    sessionActivePanel?.classList.add('hidden');
+    sessionActivePanel?.classList.remove('flex');
+    sessionStatusBadge?.classList.add('hidden');
+    return;
+  }
+
+  // Active state
+  sessionIdle?.classList.add('hidden');
+  sessionActivePanel?.classList.remove('hidden');
+  sessionActivePanel?.classList.add('flex');
+  sessionStatusBadge?.classList.remove('hidden');
+
+  if (sessionCodeDisplay) sessionCodeDisplay.textContent = Session.code;
+  if (sessionStatusText) sessionStatusText.textContent = Session.isHost ? 'Host' : 'Player';
+
+  // Role-specific elements
+  if (Session.isHost) {
+    sessionPlayerListWrap?.classList.remove('hidden');
+    sessionHostDrawDisplay?.classList.add('hidden');
+    sessionHostDrawDisplay?.classList.remove('flex');
+    btnSessionStart?.classList.remove('hidden');
+    if (btnSessionLeaveLabel) btnSessionLeaveLabel.textContent = 'ยุติเซสชัน';
+  } else {
+    sessionPlayerListWrap?.classList.add('hidden');
+    sessionHostDrawDisplay?.classList.remove('hidden');
+    sessionHostDrawDisplay?.classList.add('flex');
+    btnSessionStart?.classList.add('hidden');
+    if (btnSessionLeaveLabel) btnSessionLeaveLabel.textContent = 'ออกจากเซสชัน';
+  }
+
+  // Game state banner
+  if (state.sessionGameStarted) {
+    if (sessionGameStateBanner) {
+      sessionGameStateBanner.className = 'flex items-center gap-2 text-sm font-black px-4 py-2.5 rounded-xl border-2 border-emerald-700 bg-emerald-100 text-emerald-900';
+    }
+    if (sessionGameStateText) sessionGameStateText.textContent = '🎮 เกมกำลังดำเนินอยู่!';
+    // Lock Edit button for players in-game
+    if (Session.isPlayer) {
+      if (tabEdit) tabEdit.style.pointerEvents = 'none';
+      if (tabEdit) tabEdit.style.opacity = '0.4';
+    }
+  } else {
+    if (sessionGameStateBanner) {
+      sessionGameStateBanner.className = 'flex items-center gap-2 text-sm font-black px-4 py-2.5 rounded-xl border-2 border-amber-600 bg-amber-100 text-amber-900';
+    }
+    if (sessionGameStateText) sessionGameStateText.textContent = 'ล็อบบี้ — รอ Host เริ่มเกม';
+    if (Session.isPlayer) {
+      if (tabEdit) tabEdit.style.pointerEvents = '';
+      if (tabEdit) tabEdit.style.opacity = '';
+    }
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function renderSessionPlayerList(players) {
+  if (!sessionPlayerList || !sessionPlayerCount) return;
+  const entries = Object.values(players || {});
+  sessionPlayerCount.textContent = entries.length;
+  sessionPlayerList.innerHTML = '';
+  entries.forEach(p => {
+    const tag = document.createElement('span');
+    tag.className = 'text-xs font-black px-3 py-1.5 rounded-full border-2 border-slate-800 bg-white text-slate-800 shadow-[1px_1px_0px_rgba(30,41,59,1)]';
+    tag.textContent = `👤 ${p.nickname || 'ผู้เล่น'}`;
+    sessionPlayerList.appendChild(tag);
+  });
+}
+
+// ── Host: create session ──────────────────────────────────────────────────────
+btnSessionCreate?.addEventListener('click', async () => {
+  audioSynth.playClick();
+  btnSessionCreate.disabled = true;
+  btnSessionCreate.textContent = 'กำลังสร้าง...';
+  try {
+    const code = await Session.create(state.adminPool);
+    renderSessionPanel();
+    // Watch player list
+    Session.onPlayersChange((players) => {
+      renderSessionPlayerList(players);
+      renderSessionPanel();
+    });
+    audioSynth.playWin();
+  } catch (err) {
+    console.error('Session create failed:', err);
+    showSessionError('ไม่สามารถสร้างเซสชันได้ กรุณาตรวจสอบการเชื่อมต่อ');
+  } finally {
+    btnSessionCreate.disabled = false;
+    btnSessionCreate.innerHTML = '<i data-lucide="plus-circle" class="h-4 w-4"></i> สร้างห้องเกม (Host)';
+    if (window.lucide) window.lucide.createIcons();
+  }
+});
+
+// ── Player: join session ──────────────────────────────────────────────────────
+btnSessionJoin?.addEventListener('click', async () => {
+  const code = inputSessionCode?.value?.trim();
+  if (!code || code.length < 6) {
+    showSessionError('กรุณากรอกรหัส 6 ตัวอักษร');
+    return;
+  }
+  audioSynth.playClick();
+  btnSessionJoin.disabled = true;
+  btnSessionJoin.textContent = 'กำลังเชื่อมต่อ...';
+  try {
+    const result = await Session.join(code, null, state.playerCells);
+    if (!result.ok) {
+      showSessionError(result.error);
+      return;
+    }
+    state.sessionGameStarted = result.gameStarted || false;
+    renderSessionPanel();
+    // Switch to player tab after joining
+    state.activeTab = 'player';
+    saveState();
+    renderViews();
+    // Listen for host draw events
+    Session.onHostUpdate((hostData) => {
+      if (sessionHostCurrent) {
+        sessionHostCurrent.textContent = hostData.current || 'รอ Host เริ่มสุ่ม...';
+      }
+    });
+    // Listen for game start
+    Session.onGameStarted(() => {
+      state.sessionGameStarted = true;
+      // Force play mode — editing locked
+      state.playerIsPlayMode = true;
+      saveState();
+      updatePlayerUIMode();
+      renderPlayerGrid();
+      renderSessionPanel();
+      audioSynth.playWin();
+    });
+    audioSynth.playClick();
+  } catch (err) {
+    console.error('Session join failed:', err);
+    showSessionError('ไม่สามารถเข้าร่วมเซสชันได้ กรุณาลองใหม่');
+  } finally {
+    btnSessionJoin.disabled = false;
+    btnSessionJoin.innerHTML = '<i data-lucide="log-in" class="h-4 w-4"></i> เข้าร่วม';
+    if (window.lucide) window.lucide.createIcons();
+  }
+});
+
+// ── Copy code to clipboard ────────────────────────────────────────────────────
+btnSessionCopy?.addEventListener('click', () => {
+  if (!Session.code) return;
+  audioSynth.playClick();
+  navigator.clipboard.writeText(Session.code).then(() => {
+    if (btnSessionCopy) {
+      btnSessionCopy.textContent = '✓ คัดลอกแล้ว!';
+      setTimeout(() => {
+        btnSessionCopy.innerHTML = '<i data-lucide="copy" class="h-4 w-4"></i> คัดลอก';
+        if (window.lucide) window.lucide.createIcons();
+      }, 1500);
+    }
+  });
+});
+
+// ── Host: start game ──────────────────────────────────────────────────────────
+btnSessionStart?.addEventListener('click', async () => {
+  audioSynth.playClick();
+  if (!Session.isHost) return;
+  btnSessionStart.disabled = true;
+  try {
+    await Session.startGame();
+    state.sessionGameStarted = true;
+    renderSessionPanel();
+  } catch (err) {
+    console.error('Start game failed:', err);
+    showSessionError('ไม่สามารถเริ่มเกมได้');
+  } finally {
+    btnSessionStart.disabled = false;
+  }
+});
+
+// ── Leave session ─────────────────────────────────────────────────────────────
+btnSessionLeave?.addEventListener('click', async () => {
+  audioSynth.playClick();
+  const confirmed = window.confirm(
+    Session.isHost
+      ? 'ยุติเซสชัน? ผู้เล่นทุกคนจะถูกตัดการเชื่อมต่อ'
+      : 'ออกจากเซสชันนี้ใช่หรือไม่?'
+  );
+  if (!confirmed) return;
+  await Session.leave();
+  state.sessionGameStarted = false;
+  // Restore edit mode for player
+  if (tabEdit) { tabEdit.style.pointerEvents = ''; tabEdit.style.opacity = ''; }
+  renderSessionPanel();
+  if (window.lucide) window.lucide.createIcons();
+});
+
+// Auto-uppercase the code input
+inputSessionCode?.addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase();
+});
+
+// Join by pressing Enter in code input
+inputSessionCode?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') btnSessionJoin?.click();
+});
+
 // --- MAIN RUNTIME INITIALIZATION ---
 loadState();
 audioSynth.toggle(state.soundEnabled);
 renderViews();
 renderSoundButtons();
+renderSessionPanel();
 
 // Auto-sync Google Sheet categories on load without showing noisy alert alerts
 syncGoogleSheetCategories(false);
