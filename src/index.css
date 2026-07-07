@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Itim&family=Sarabun:wght@300;400;600;700&family=Sriracha&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&family=Itim&family=Sarabun:wght@300;400;600;700&family=Sriracha&display=swap');
 
 @import "tailwindcss";
 
 :root {
-  font-family: 'Sriracha', 'Fredoka', 'Sarabun', system-ui, -apple-system, sans-serif;
+  font-family: 'IBM Plex Sans Thai', 'Sriracha', 'Fredoka', 'Sarabun', system-ui, -apple-system, sans-serif;
+  font-size: 18px; /* Increases the base font size by one step (default is 16px) */
 }
 
 /* Custom Tabletop Board Game Aesthetics */

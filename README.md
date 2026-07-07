@@ -8,7 +8,7 @@ Celebrity Bingo is a lightweight browser-based game helper for running a celebri
 - **Player Board Mode**: Automatically generate and stamp/mark bingo cards with selected categories.
 - **Real-Time Synchronization**: Sync the drawn categories, board states, and lobby information between host and players instantly.
 - **Local Persistence**: Remembers game progress and configuration automatically using browser local storage.
-- **Premium Tabletop UI**: Sleek, playful tabletop board game design built with Tailwind CSS. Uses the beautiful **Sriracha** hand-written font for a friendly, natural look.
+- **Premium Tabletop UI**: Sleek, playful tabletop board game design built with Tailwind CSS. Uses the clean **IBM Plex Sans Thai** font for a modern look.
 - **Sound & Voice Callers**: Built-in sound effects and speech synthesis for automatic name callers.
 
 ## Tech stack
