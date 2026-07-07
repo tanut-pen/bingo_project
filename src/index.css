@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Itim&family=Sarabun:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Itim&family=Sarabun:wght@300;400;600;700&family=Sriracha&display=swap');
 
 @import "tailwindcss";
 
 :root {
-  font-family: 'Fredoka', 'Sarabun', system-ui, -apple-system, sans-serif;
+  font-family: 'Sriracha', 'Fredoka', 'Sarabun', system-ui, -apple-system, sans-serif;
 }
 
 /* Custom Tabletop Board Game Aesthetics */
