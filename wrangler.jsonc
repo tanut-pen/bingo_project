@@ -1,10 +1,14 @@
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bingo-project",
   "compatibility_date": "2026-07-06",
-  "main": "src/entry.js",
-  "keep_vars": true,
+  "observability": {
+    "enabled": true
+  },
   "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS"
-  }
+    "not_found_handling": "single-page-application"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
 }
